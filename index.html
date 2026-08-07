@@ -388,6 +388,18 @@
   }
   .support-link:hover{ text-decoration-color: var(--accent); }
 
+  /* ---------- support unavailable notice ---------- */
+  .support-notice{
+    font-size: 11.5px;
+    color: var(--muted);
+    text-align:center;
+    height: 16px;
+    margin-top: 10px;
+    opacity:0;
+    transition: opacity 0.2s ease;
+  }
+  .support-notice.show{ opacity:1; color: var(--danger); }
+
   /* ---------- telegram ---------- */
   .tg-lead{
     font-size: 13px;
@@ -454,7 +466,7 @@
       </div>
       <div class="actions" style="margin-top:10px;">
         <a class="btn" id="githubLinkHero" href="#" target="_blank" rel="noopener">⭐ GitHub</a>
-        <a class="btn" id="supportLinkHero" href="#" target="_blank" rel="noopener">❤️ Support</a>
+        <button class="btn" id="supportBtnHero" type="button">❤️ Support</button>
       </div>
       <div class="toast" id="toast">link copied — paste it into your client</div>
       <div class="copy-count" id="copyCount">link copied <b>—</b> times</div>
@@ -582,7 +594,8 @@
       <p class="bar-note" style="margin-top:14px;">The project stays up as long as you support it — without donations, the server goes offline.</p>
 
       <p class="support-lead" style="margin-top:18px; margin-bottom:12px;">The project is completely free. If you'd like to help cover server costs, any support is appreciated.</p>
-      <a class="btn btn-primary" id="supportLinkBottom" href="#" target="_blank" rel="noopener" style="display:inline-flex; max-width: 240px;">❤️ Support the project</a>
+      <button class="btn btn-primary" id="supportBtnBottom" type="button" style="display:inline-flex; max-width: 240px;">❤️ Support the project</button>
+      <div class="support-notice" id="supportNotice">Currently unavailable</div>
     </section>
 
     <!-- ================= 7. TELEGRAM ================= -->
@@ -641,7 +654,13 @@
     // If you start using a real donation platform (YooMoney/Boosty/
     // DonationAlerts/etc), swap this block for their official widget instead.
     donatedThisMonth: 0,
-    supportUrl: null, // set the real donation link once the platform is ready
+
+    // Support/donate link is not live yet. Once you have a real donation
+    // page, set supportEnabled to true and fill in supportUrl — the
+    // buttons below will then link out normally instead of showing the
+    // "Currently unavailable" notice.
+    supportEnabled: false,
+    supportUrl: 'https://example.com/donate',
 
     // global "link copied" counter — powered by countapi.mileshilliard.com
     // (no signup, no keys). Keys are public and shared across everyone using
@@ -663,11 +682,28 @@
   ['githubLinkHero', 'footerGithub'].forEach(id => {
     document.getElementById(id).href = CONFIG.githubUrl;
   });
-  ['supportLinkHero', 'supportLinkBottom'].forEach(id => {
-    document.getElementById(id).href = CONFIG.supportUrl;
-  });
   ['telegramLink', 'footerTelegram'].forEach(id => {
     document.getElementById(id).href = CONFIG.telegramUrl;
+  });
+
+  // ---- support buttons: show "Currently unavailable" until a real link is set ----
+  const supportNotice = document.getElementById('supportNotice');
+  let supportNoticeTimer = null;
+
+  function handleSupportClick(e){
+    if (CONFIG.supportEnabled && CONFIG.supportUrl) {
+      window.open(CONFIG.supportUrl, '_blank', 'noopener');
+      return;
+    }
+    e.preventDefault();
+    supportNotice.textContent = 'Currently unavailable';
+    supportNotice.classList.add('show');
+    clearTimeout(supportNoticeTimer);
+    supportNoticeTimer = setTimeout(() => supportNotice.classList.remove('show'), 2500);
+  }
+
+  ['supportBtnHero', 'supportBtnBottom'].forEach(id => {
+    document.getElementById(id).addEventListener('click', handleSupportClick);
   });
 
   // ---- status ----
