@@ -164,8 +164,8 @@
     font-size: 11.5px;
     color: var(--accent);
     text-align:center;
-    height: 16px;
-    margin-top: 10px;
+    height: 14px;
+    margin-top: 2px;
     opacity:0;
     transition: opacity 0.2s ease;
   }
@@ -393,8 +393,8 @@
     font-size: 11.5px;
     color: var(--muted);
     text-align:center;
-    height: 16px;
-    margin-top: 10px;
+    height: 14px;
+    margin-top: 2px;
     opacity:0;
     transition: opacity 0.2s ease;
   }
@@ -468,6 +468,7 @@
         <a class="btn" id="githubLinkHero" href="#" target="_blank" rel="noopener">⭐ GitHub</a>
         <button class="btn" id="supportBtnHero" type="button">❤️ Support</button>
       </div>
+      <div class="support-notice" id="supportNoticeHero">Currently unavailable</div>
       <div class="toast" id="toast">link copied — paste it into your client</div>
       <div class="copy-count" id="copyCount">link copied <b>—</b> times</div>
     </section>
@@ -615,7 +616,6 @@
 
     <!-- ================= FOOTER ================= -->
     <footer>
-      <div>YT Lite Tunnel · MIT License</div>
       <div class="footer-links">
         <a id="footerGithub" href="#" target="_blank" rel="noopener">GitHub</a>
         <a id="footerTelegram" href="#" target="_blank" rel="noopener">Telegram</a>
@@ -686,25 +686,26 @@
     document.getElementById(id).href = CONFIG.telegramUrl;
   });
 
-  // ---- support buttons: show "Currently unavailable" until a real link is set ----
-  const supportNotice = document.getElementById('supportNotice');
-  let supportNoticeTimer = null;
+  // ---- support buttons: show "Currently unavailable" right under the clicked button ----
+  const supportNoticeTimers = {};
 
-  function handleSupportClick(e){
-    if (CONFIG.supportEnabled && CONFIG.supportUrl) {
-      window.open(CONFIG.supportUrl, '_blank', 'noopener');
-      return;
-    }
-    e.preventDefault();
-    supportNotice.textContent = 'Currently unavailable';
-    supportNotice.classList.add('show');
-    clearTimeout(supportNoticeTimer);
-    supportNoticeTimer = setTimeout(() => supportNotice.classList.remove('show'), 2500);
+  function wireSupportButton(btnId, noticeId){
+    const btn = document.getElementById(btnId);
+    const notice = document.getElementById(noticeId);
+    btn.addEventListener('click', (e) => {
+      if (CONFIG.supportEnabled && CONFIG.supportUrl) {
+        window.open(CONFIG.supportUrl, '_blank', 'noopener');
+        return;
+      }
+      e.preventDefault();
+      notice.classList.add('show');
+      clearTimeout(supportNoticeTimers[noticeId]);
+      supportNoticeTimers[noticeId] = setTimeout(() => notice.classList.remove('show'), 2500);
+    });
   }
 
-  ['supportBtnHero', 'supportBtnBottom'].forEach(id => {
-    document.getElementById(id).addEventListener('click', handleSupportClick);
-  });
+  wireSupportButton('supportBtnHero', 'supportNoticeHero');
+  wireSupportButton('supportBtnBottom', 'supportNotice');
 
   // ---- status ----
   document.getElementById('statLocation').textContent = CONFIG.location;
