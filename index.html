@@ -280,6 +280,12 @@
   }
 
   .apps{ display:flex; flex-direction:column; gap: 16px; }
+  .app-row{
+    background: rgba(46,217,168,0.04);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+  }
   .app-row .app-name{
     font-size: 13px;
     font-weight: 500;
@@ -430,7 +436,6 @@
 
       <div class="actions">
         <button class="btn btn-primary" id="copyHappBtn">📋 Copy for Happ</button>
-        <button class="btn btn-primary" id="copyIncyBtn">📋 Copy for Incy</button>
       </div>
       <div class="actions" style="margin-top:10px;">
         <a class="btn" id="githubLinkHero" href="#" target="_blank" rel="noopener">⭐ GitHub</a>
@@ -514,8 +519,8 @@
       </div>
 
       <ol class="steps">
-        <li>Install Happ or Incy — links below.</li>
-        <li>Tap the "Copy" button above for your app.</li>
+        <li>Install Happ — link below.</li>
+        <li>Tap the "Copy" button above.</li>
         <li>In the app, choose "add subscription by link" and paste it.</li>
         <li>Connect. Done — YouTube without ads, everything else as usual.</li>
       </ol>
@@ -598,7 +603,6 @@
     loadPercent: 12,
 
     subscriptionUrlHapp: 'https://example.com/sub/happ-replace-with-real-link',
-    subscriptionUrlIncy: 'https://example.com/sub/incy-replace-with-real-link',
     githubUrl: 'https://github.com/',
     telegramUrl: 'https://t.me/+s87tEkPayo9iOWFi',
 
@@ -698,7 +702,7 @@
   })();
 
   // ---- install / apps ----
-  // Happ and Incy both cover most platforms already, so this lists
+  // Happ covers most platforms already, so this lists
   // apps (not platforms). Replace/add rows the same way.
   (function renderApps(){
     const apps = [
@@ -706,11 +710,6 @@
         name: 'Happ',
         platforms: 'Android · Windows · macOS · Linux · iOS · TV',
         url: 'https://www.happ.su/main'
-      },
-      {
-        name: 'Incy',
-        platforms: 'Android · Windows · macOS · Linux · iOS · TV',
-        url: 'https://github.com/INCY-DEV/incy-platforms'
       }
     ];
     const wrap = document.getElementById('apps');
@@ -756,7 +755,6 @@
     });
   }
   wireCopyButton('copyHappBtn', CONFIG.subscriptionUrlHapp);
-  wireCopyButton('copyIncyBtn', CONFIG.subscriptionUrlIncy);
 
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     document.querySelectorAll('animateMotion').forEach(el => el.setAttribute('repeatCount', '0'));
