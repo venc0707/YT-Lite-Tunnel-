@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YT Lite Tunnel</title>
+<meta name="description" content="YouTube without ads. Everything else — direct.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0a0b0d;
+    --panel: #101216;
+    --border: #20242b;
+    --text: #e7eaee;
+    --muted: #7b838d;
+    --accent: #2ed9a8;
+    --accent-dim: rgba(46,217,168,0.35);
+    --danger: #ff4d4d;
+    --radius: 3px;
+  }
+
+  *{ box-sizing: border-box; }
+
+  html, body{
+    margin:0; padding:0; min-height:100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+
+  body{
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    padding: 40px 20px;
+  }
+
+  body::before{
+    content:"";
+    position:fixed; inset:0;
+    pointer-events:none;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(255,255,255,0.015) 0px,
+      rgba(255,255,255,0.015) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+    mix-blend-mode: overlay;
+  }
+
+  .card{
+    position:relative;
+    width:100%;
+    max-width: 460px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px 30px 24px;
+  }
+
+  .section{
+    padding-top: 22px;
+    margin-top: 22px;
+    border-top: 1px solid var(--border);
+  }
+  .section:first-child{
+    padding-top: 0;
+    margin-top: 0;
+    border-top: none;
+  }
+
+  .prompt{
+    color: var(--muted);
+    font-size: 12.5px;
+    letter-spacing: 0.02em;
+    display:flex;
+    align-items:center;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+  .prompt .caret{ color: var(--accent); }
+  .prompt .cursor{
+    display:inline-block;
+    width: 7px; height: 13px;
+    background: var(--accent);
+    animation: blink 1s steps(1) infinite;
+  }
+  @keyframes blink{ 50%{ opacity:0; } }
+
+  /* ---------- hero ---------- */
+  h1{
+    margin: 0 0 10px;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    display:flex;
+    align-items:center;
+    gap: 10px;
+  }
+  h1 .play{
+    width:0; height:0;
+    border-top: 6px solid transparent;
+    border-bottom: 6px solid transparent;
+    border-left: 10px solid var(--danger);
+    flex-shrink:0;
+  }
+
+  .tagline{
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.5;
+    margin: 0 0 16px;
+  }
+
+  .badges{
+    display:flex;
+    flex-wrap:wrap;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .badge{
+    font-size: 10.5px;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 4px 8px;
+    letter-spacing: 0.02em;
+  }
+
+  .actions{ display:flex; gap: 10px; flex-wrap: wrap; }
+  .btn{
+    flex:1;
+    min-width: 120px;
+    font-family: inherit;
+    font-size: 13px;
+    padding: 12px 14px;
+    border-radius: var(--radius);
+    cursor:pointer;
+    text-align:center;
+    text-decoration:none;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap: 6px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text);
+    transition: opacity 0.15s ease, transform 0.1s ease, border-color 0.15s ease;
+  }
+  .btn:active{ transform: scale(0.98); }
+  .btn:hover{ border-color: var(--accent-dim); color: var(--accent); }
+  .btn-primary{
+    background: var(--accent);
+    color: #06251c;
+    font-weight: 700;
+    border-color: var(--accent);
+  }
+  .btn-primary:hover{ opacity: 0.9; color: #06251c; }
+
+  .toast{
+    font-size: 11.5px;
+    color: var(--accent);
+    text-align:center;
+    height: 16px;
+    margin-top: 10px;
+    opacity:0;
+    transition: opacity 0.2s ease;
+  }
+  .toast.show{ opacity:1; }
+
+  .copy-count{
+    text-align:center;
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 12px;
+  }
+  .copy-count b{ color: var(--accent); font-weight: 500; }
+
+  /* ---------- how it works ---------- */
+  .diagram-wrap{ margin: 0 0 14px; }
+  .diagram-wrap svg{ width: 100%; height: auto; display:block; }
+  .diagram-label{ font-size: 9px; fill: var(--muted); letter-spacing: 0.03em; }
+  .diagram-label.accent{ fill: var(--accent); }
+  .how-line{
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  /* ---------- status ---------- */
+  .status-grid{
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px 8px;
+    margin-bottom: 18px;
+  }
+  .status-item .status-key{
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 4px;
+    display:flex;
+    align-items:center;
+    gap: 6px;
+  }
+  .status-item .status-val{
+    font-size: 14px;
+    color: var(--text);
+    font-weight: 500;
+  }
+  .dot{
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 0 var(--accent-dim);
+    animation: pulse 2s infinite;
+    flex-shrink:0;
+  }
+  @keyframes pulse{
+    0%{ box-shadow: 0 0 0 0 var(--accent-dim); }
+    70%{ box-shadow: 0 0 0 6px rgba(46,217,168,0); }
+    100%{ box-shadow: 0 0 0 0 rgba(46,217,168,0); }
+  }
+
+  .bar-track{
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow:hidden;
+    margin-bottom: 10px;
+  }
+  .bar-fill{
+    height:100%;
+    background: var(--accent);
+    border-radius: 3px;
+    width:0%;
+    transition: width 0.6s ease;
+  }
+  .bar-numbers{
+    display:flex;
+    justify-content:space-between;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .bar-numbers b{ color: var(--text); font-weight:500; }
+  .bar-note{ font-size: 11px; color: var(--muted); }
+
+  /* ---------- install ---------- */
+  .steps{
+    list-style: none;
+    counter-reset: step;
+    margin: 0 0 22px;
+    padding: 0;
+  }
+  .steps li{
+    counter-increment: step;
+    position: relative;
+    padding-left: 26px;
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.5;
+    margin-bottom: 12px;
+  }
+  .steps li::before{
+    content: counter(step);
+    position:absolute;
+    left:0; top:1px;
+    width: 16px; height:16px;
+    border: 1px solid var(--accent-dim);
+    color: var(--accent);
+    border-radius: 50%;
+    font-size: 10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  .apps{ display:flex; flex-direction:column; gap: 16px; }
+  .app-row .app-name{
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 2px;
+  }
+  .app-row .app-platforms{
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .app-links{ display:flex; flex-wrap:wrap; gap: 6px; }
+  .app-links a{
+    font-size: 12px;
+    color: var(--text);
+    text-decoration:none;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 6px 10px;
+    transition: border-color 0.15s ease, color 0.15s ease;
+  }
+  .app-links a:hover{ border-color: var(--accent-dim); color: var(--accent); }
+  .app-note{
+    font-size: 10.5px;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+
+  /* ---------- open source ---------- */
+  .checklist{
+    list-style:none;
+    margin: 0 0 18px;
+    padding: 0;
+    display:flex;
+    flex-direction:column;
+    gap: 8px;
+  }
+  .checklist li{
+    font-size: 13px;
+    color: var(--text);
+    display:flex;
+    align-items:center;
+    gap: 8px;
+  }
+  .checklist li .check{ color: var(--accent); }
+
+  /* ---------- support ---------- */
+  .support-lead{
+    font-size: 13px;
+    color: var(--text);
+    margin: 0 0 18px;
+    line-height: 1.5;
+  }
+  .support-lead b{ color: var(--accent); }
+  .cost-row{
+    display:flex;
+    justify-content:space-between;
+    font-size: 12px;
+    color: var(--muted);
+    padding: 6px 0;
+  }
+  .cost-row .cost-amount{ text-align:right; }
+  .cost-row .cost-usd{
+    display:block;
+    font-size: 10.5px;
+    color: var(--muted);
+    opacity: 0.8;
+  }
+  .cost-row.total{
+    border-top: 1px dashed var(--border);
+    margin-top: 4px;
+    padding-top: 10px;
+    color: var(--text);
+    font-weight: 500;
+  }
+  .cost-row.total .cost-usd{ color: var(--muted); font-weight: 400; }
+  .donations{ margin-top: 18px; }
+  .support-link{
+    display:inline-block;
+    margin-top: 16px;
+    font-size: 12.5px;
+    color: var(--accent);
+    text-decoration: underline;
+    text-decoration-color: var(--accent-dim);
+    text-underline-offset: 3px;
+  }
+  .support-link:hover{ text-decoration-color: var(--accent); }
+
+  /* ---------- telegram ---------- */
+  .tg-lead{
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.6;
+    margin: 0 0 16px;
+  }
+  .tg-lead .muted-line{ color: var(--muted); display:block; }
+
+  footer{
+    margin-top: 22px;
+    text-align:center;
+    font-size: 11.5px;
+    color: var(--muted);
+    display:flex;
+    flex-direction:column;
+    gap: 6px;
+  }
+  footer .footer-links{ display:flex; justify-content:center; gap: 12px; }
+  footer a{
+    color: var(--muted);
+    text-decoration: underline;
+    text-decoration-color: var(--border);
+    text-underline-offset: 3px;
+  }
+  footer a:hover{ color: var(--text); }
+
+  @media (max-width: 400px){
+    .card{ padding: 22px 18px; }
+    .status-grid{ grid-template-columns: repeat(3, 1fr); gap: 10px 6px; }
+    .status-item .status-key{ font-size: 10px; }
+    .status-item .status-val{ font-size: 12.5px; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .dot, .prompt .cursor{ animation: none; }
+    .bar-fill{ transition: none; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="card">
+
+    <!-- ================= 1. HOME ================= -->
+    <section class="section">
+      <div class="prompt">
+        <span class="caret">$</span>
+        <span>yt-lite-tunnel</span>
+        <span class="cursor"></span>
+      </div>
+
+      <h1><span class="play"></span> YT Lite Tunnel</h1>
+      <p class="tagline">YouTube without ads.<br>Everything else — direct.</p>
+
+      <div class="badges">
+        <span class="badge">Open Source</span>
+        <span class="badge">Community Powered</span>
+        <span class="badge">Free</span>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-primary" id="copyHappBtn">📋 Copy for Happ</button>
+        <button class="btn btn-primary" id="copyIncyBtn">📋 Copy for Incy</button>
+      </div>
+      <div class="actions" style="margin-top:10px;">
+        <a class="btn" id="githubLinkHero" href="#" target="_blank" rel="noopener">⭐ GitHub</a>
+        <a class="btn" id="supportLinkHero" href="#" target="_blank" rel="noopener">❤️ Support</a>
+      </div>
+      <div class="toast" id="toast">link copied — paste it into your client</div>
+      <div class="copy-count" id="copyCount">link copied <b>—</b> times</div>
+    </section>
+
+    <!-- ================= 2. HOW IT WORKS ================= -->
+    <section class="section">
+      <div class="prompt">
+        <span class="caret">$</span>
+        <span>yt-lite-tunnel --how-it-works</span>
+      </div>
+
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 480 150" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <circle cx="26" cy="78" r="4" fill="#7b838d"/>
+          <text x="10" y="98" class="diagram-label">you</text>
+
+          <path id="tunnelPath" d="M26,78 C110,20 190,20 250,40 C320,52 360,42 430,40"
+                fill="none" stroke="#2ed9a8" stroke-width="1.5" stroke-dasharray="3 5" opacity="0.55"/>
+          <circle r="2.6" fill="#2ed9a8">
+            <animateMotion dur="2.4s" repeatCount="indefinite">
+              <mpath href="#tunnelPath"/>
+            </animateMotion>
+          </circle>
+
+          <rect x="238" y="30" width="24" height="20" rx="2" fill="none" stroke="#2ed9a8" stroke-width="1.2"/>
+          <text x="222" y="24" class="diagram-label accent">youtube · server</text>
+
+          <polygon points="424,34 424,46 434,40" fill="#ff4d4d"/>
+          <text x="400" y="60" class="diagram-label">ad-free</text>
+
+          <path d="M26,78 C130,118 300,124 430,120" fill="none" stroke="#3a3f47" stroke-width="1.2" stroke-dasharray="1 6"/>
+          <circle cx="430" cy="120" r="5" fill="none" stroke="#7b838d" stroke-width="1.2"/>
+          <text x="380" y="140" class="diagram-label">everything else · direct</text>
+        </svg>
+      </div>
+
+      <p class="how-line">Only YouTube traffic goes through the server. Everything else connects directly.</p>
+    </section>
+
+    <!-- ================= 3. SERVER STATUS ================= -->
+    <section class="section">
+      <div class="prompt">
+        <span class="caret">$</span>
+        <span>yt-lite-tunnel --status</span>
+      </div>
+
+      <div class="status-grid">
+        <div class="status-item">
+          <div class="status-key"><span class="dot"></span> status</div>
+          <div class="status-val">online</div>
+        </div>
+        <div class="status-item">
+          <div class="status-key">location</div>
+          <div class="status-val" id="statLocation">—</div>
+        </div>
+        <div class="status-item">
+          <div class="status-key">load</div>
+          <div class="status-val" id="statLoad">—</div>
+        </div>
+      </div>
+
+      <div class="bar-numbers">
+        <span>traffic <b id="trafficUsed">—</b></span>
+        <span>remaining <b id="trafficLeft">—</b></span>
+      </div>
+      <div class="bar-track"><div class="bar-fill" id="trafficBar"></div></div>
+      <div class="bar-note" id="trafficNote">resets on the 1st of each month</div>
+      <div class="bar-note" id="bandwidthNote" style="margin-top:4px;">Network bandwidth — up to 3 Gbit/s</div>
+    </section>
+
+    <!-- ================= 4. INSTALL ================= -->
+    <section class="section">
+      <div class="prompt">
+        <span class="caret">$</span>
+        <span>yt-lite-tunnel --install</span>
+      </div>
+
+      <ol class="steps">
+        <li>Install Happ or Incy — links below.</li>
+        <li>Tap the "Copy" button above for your app.</li>
+        <li>In the app, choose "add subscription by link" and paste it.</li>
+        <li>Connect. Done — YouTube without ads, everything else as usual.</li>
+      </ol>
+
+      <div class="apps" id="apps"></div>
+    </section>
+
+    <!-- ================= 5. OPEN SOURCE ================= -->
+    <section class="section">
+      <div class="prompt">
+        <span class="caret">$</span>
+        <span>yt-lite-tunnel --open-source</span>
+      </div>
+
+      <ul class="checklist">
+        <li><span class="check">✓</span> Open source code</li>
+        <li><span class="check">✓</span> No sign-up</li>
+        <li><span class="check">✓</span> No ads</li>
+        <li><span class="check">✓</span> No logs</li>
+        <li><span class="check">✓</span> Anyone can run their own server</li>
+      </ul>
+    </section>
+
+    <!-- ================= 6. SUPPORT THE PROJECT ================= -->
+    <section class="section">
+      <div class="prompt">
+        <span class="caret">$</span>
+        <span>yt-lite-tunnel --support</span>
+      </div>
+
+      <p class="support-lead">Keeping the service running costs <b id="supportTotal">—</b> per month.</p>
+
+      <div id="costBreakdown"></div>
+
+      <div class="donations">
+        <div class="bar-numbers">
+          <span>received this month <b id="donatedAmount">—</b></span>
+          <span id="donatedPct">—</span>
+        </div>
+        <div class="bar-track"><div class="bar-fill" id="donatedBar"></div></div>
+        <div class="bar-note" id="donatedNote"></div>
+      </div>
+
+      <p class="bar-note" style="margin-top:14px;">The project stays up as long as you support it — without donations, the server goes offline.</p>
+
+      <p class="support-lead" style="margin-top:18px; margin-bottom:12px;">The project is completely free. If you'd like to help cover server costs, any support is appreciated.</p>
+      <a class="btn btn-primary" id="supportLinkBottom" href="#" target="_blank" rel="noopener" style="display:inline-flex; max-width: 240px;">❤️ Support the project</a>
+    </section>
+
+    <!-- ================= 7. TELEGRAM ================= -->
+    <section class="section">
+      <div class="prompt">
+        <span class="caret">$</span>
+        <span>yt-lite-tunnel --contact</span>
+      </div>
+
+      <p class="tg-lead">
+        Questions? Found a bug? Have a suggestion?
+        <span class="muted-line">Message us on Telegram — we reply there.</span>
+      </p>
+
+      <a class="btn btn-primary" id="telegramLink" href="#" target="_blank" rel="noopener" style="display:inline-flex; max-width: 220px;">✈️ Telegram</a>
+    </section>
+
+    <!-- ================= FOOTER ================= -->
+    <footer>
+      <div>YT Lite Tunnel · MIT License</div>
+      <div class="footer-links">
+        <a id="footerGithub" href="#" target="_blank" rel="noopener">GitHub</a>
+        <a id="footerTelegram" href="#" target="_blank" rel="noopener">Telegram</a>
+      </div>
+    </footer>
+
+  </div>
+
+<script>
+  // ============ EDIT THIS BLOCK ============
+  const CONFIG = {
+    location: 'Russia',
+    loadPercent: 12,
+
+    subscriptionUrlHapp: 'https://example.com/sub/happ-replace-with-real-link',
+    subscriptionUrlIncy: 'https://example.com/sub/incy-replace-with-real-link',
+    githubUrl: 'https://github.com/',
+    telegramUrl: 'https://t.me/+s87tEkPayo9iOWFi',
+
+    // traffic — filled in manually for now
+    trafficUsedTB: 0.61,
+    trafficTotalTB: 3,
+    resetDayOfMonth: 1,
+
+    // approximate RUB -> USD rate, update by hand every so often.
+    // Only used to show a rough "(~$x)" hint next to ruble amounts.
+    usdRubRate: 81,
+
+    // server cost breakdown — total sums automatically
+    costBreakdown: [
+      { label: 'VPS · 1 vCPU / 2 GB · Russia', value: 250 }
+    ],
+
+    // donations — update by hand once a month (or a few times a month).
+    // Not wired to any auto-counter on purpose: a public no-auth counter
+    // can be hit by anyone, so a money figure on it isn't trustworthy.
+    // If you start using a real donation platform (YooMoney/Boosty/
+    // DonationAlerts/etc), swap this block for their official widget instead.
+    donatedThisMonth: 0,
+    supportUrl: 'https://example.com/donate',
+
+    // global "link copied" counter — powered by countapi.mileshilliard.com
+    // (no signup, no keys). Keys are public and shared across everyone using
+    // that service — keep this unique to your project so nobody collides with it.
+    counterKey: 'ytlitetunnel-config-copies-7f2a'
+  };
+  // ==========================================
+
+  const COUNTER_API = 'https://countapi.mileshilliard.com/api/v1';
+  const fmtRUB = n => n.toLocaleString('en-US') + ' ₽';
+  const fmtUSD = n => {
+    const usd = n / CONFIG.usdRubRate;
+    const val = usd < 10 ? usd.toFixed(2) : Math.round(usd);
+    return `(~$${val})`;
+  };
+  const fmtRUBWithUSD = n => `${fmtRUB(n)} <span class="cost-usd">${fmtUSD(n)}</span>`;
+
+  // ---- links (hero, open source, telegram, footer) ----
+  ['githubLinkHero', 'footerGithub'].forEach(id => {
+    document.getElementById(id).href = CONFIG.githubUrl;
+  });
+  ['supportLinkHero', 'supportLinkBottom'].forEach(id => {
+    document.getElementById(id).href = CONFIG.supportUrl;
+  });
+  ['telegramLink', 'footerTelegram'].forEach(id => {
+    document.getElementById(id).href = CONFIG.telegramUrl;
+  });
+
+  // ---- status ----
+  document.getElementById('statLocation').textContent = CONFIG.location;
+  document.getElementById('statLoad').textContent = CONFIG.loadPercent + '%';
+
+  // ---- traffic bar ----
+  function fmtTraffic(tb){
+    return `${Math.round(tb * 1000)} GB`;
+  }
+
+  (function renderTraffic(){
+    const used = CONFIG.trafficUsedTB;
+    const total = CONFIG.trafficTotalTB;
+    const left = total - used;
+    const pct = Math.min(100, (used / total) * 100);
+    document.getElementById('trafficUsed').textContent = `${fmtTraffic(used)} / ${fmtTraffic(total)}`;
+    document.getElementById('trafficLeft').textContent = fmtTraffic(left);
+    document.getElementById('trafficBar').style.width = pct + '%';
+    document.getElementById('trafficNote').textContent = `resets on day ${CONFIG.resetDayOfMonth} of each month`;
+  })();
+
+  // ---- support / cost breakdown + donations ----
+  (function renderSupport(){
+    const wrap = document.getElementById('costBreakdown');
+    let total = 0;
+    CONFIG.costBreakdown.forEach(item => {
+      total += item.value;
+      const row = document.createElement('div');
+      row.className = 'cost-row';
+      row.innerHTML = `<span>${item.label}</span><span class="cost-amount">${fmtRUBWithUSD(item.value)}</span>`;
+      wrap.appendChild(row);
+    });
+    const totalRow = document.createElement('div');
+    totalRow.className = 'cost-row total';
+    totalRow.innerHTML = `<span>total</span><span class="cost-amount">${fmtRUBWithUSD(total)} / month</span>`;
+    wrap.appendChild(totalRow);
+    document.getElementById('supportTotal').innerHTML = fmtRUBWithUSD(total);
+
+    const donated = CONFIG.donatedThisMonth;
+    const pct = Math.min(100, (donated / total) * 100);
+    document.getElementById('donatedAmount').innerHTML = fmtRUBWithUSD(donated);
+    document.getElementById('donatedPct').textContent = Math.round(pct) + '%';
+    document.getElementById('donatedBar').style.width = pct + '%';
+    document.getElementById('donatedNote').innerHTML =
+      donated >= total ? "this month's goal reached ✅" : `short by ${fmtRUBWithUSD(total - donated)}`;
+  })();
+
+  // ---- install / apps ----
+  // Happ and Incy both cover most platforms already, so this lists
+  // apps (not platforms). Replace/add rows the same way.
+  (function renderApps(){
+    const apps = [
+      {
+        name: 'Happ',
+        platforms: 'Android · Windows · macOS · Linux · iOS · TV',
+        url: 'https://www.happ.su/main'
+      },
+      {
+        name: 'Incy',
+        platforms: 'Android · Windows · macOS · Linux · iOS · TV',
+        url: 'https://github.com/INCY-DEV/incy-platforms'
+      }
+    ];
+    const wrap = document.getElementById('apps');
+    apps.forEach(app => {
+      const row = document.createElement('div');
+      row.className = 'app-row';
+      row.innerHTML = `
+        <div class="app-name">${app.name}</div>
+        <div class="app-platforms">${app.platforms}</div>
+        <div class="app-links"><a href="${app.url}" target="_blank" rel="noopener">Download →</a></div>`;
+      wrap.appendChild(row);
+    });
+  })();
+
+  // ---- global copy counter ----
+  const copyCountEl = document.getElementById('copyCount');
+
+  function showCopyCount(value){
+    copyCountEl.innerHTML = `link copied <b>${value}</b> times`;
+  }
+
+  fetch(`${COUNTER_API}/get/${CONFIG.counterKey}`)
+    .then(r => r.ok ? r.json() : { value: 0 })
+    .then(data => showCopyCount(data.value ?? 0))
+    .catch(() => { copyCountEl.style.display = 'none'; });
+
+  function bumpCopyCount(){
+    fetch(`${COUNTER_API}/hit/${CONFIG.counterKey}`)
+      .then(r => r.json())
+      .then(data => showCopyCount(data.value))
+      .catch(() => {});
+  }
+
+  // ---- actions ----
+  const toast = document.getElementById('toast');
+
+  function wireCopyButton(id, url){
+    document.getElementById(id).addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(url); } catch (e) {}
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2200);
+      bumpCopyCount();
+    });
+  }
+  wireCopyButton('copyHappBtn', CONFIG.subscriptionUrlHapp);
+  wireCopyButton('copyIncyBtn', CONFIG.subscriptionUrlIncy);
+
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    document.querySelectorAll('animateMotion').forEach(el => el.setAttribute('repeatCount', '0'));
+  }
+</script>
+
+</body>
+</html>
