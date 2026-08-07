@@ -307,6 +307,21 @@
     transition: border-color 0.15s ease, color 0.15s ease;
   }
   .app-links a:hover{ border-color: var(--accent-dim); color: var(--accent); }
+  .tv-links{
+    display:flex;
+    flex-wrap:wrap;
+    gap: 4px 12px;
+    margin-top: 8px;
+  }
+  .tv-links a{
+    font-size: 11.5px;
+    color: var(--muted);
+    text-decoration: underline;
+    text-decoration-color: var(--border);
+    text-underline-offset: 3px;
+    transition: color 0.15s ease, text-decoration-color 0.15s ease;
+  }
+  .tv-links a:hover{ color: var(--accent); text-decoration-color: var(--accent-dim); }
   .app-note{
     font-size: 10.5px;
     color: var(--muted);
@@ -626,7 +641,7 @@
     // If you start using a real donation platform (YooMoney/Boosty/
     // DonationAlerts/etc), swap this block for their official widget instead.
     donatedThisMonth: 0,
-    supportUrl: 'https://example.com/donate',
+    supportUrl: null, // set the real donation link once the platform is ready
 
     // global "link copied" counter — powered by countapi.mileshilliard.com
     // (no signup, no keys). Keys are public and shared across everyone using
@@ -709,17 +724,27 @@
       {
         name: 'Happ',
         platforms: 'Android · Windows · macOS · Linux · iOS · TV',
-        url: 'https://www.happ.su/main'
+        url: 'https://www.happ.su/main',
+        tvLinks: [
+          { label: 'Android TV setup', url: 'https://www.happ.su/main/faq/android-tv' },
+          { label: 'Apple TV setup', url: 'https://www.happ.su/main/faq/apple-tv-tvos' }
+        ]
       }
     ];
     const wrap = document.getElementById('apps');
     apps.forEach(app => {
       const row = document.createElement('div');
       row.className = 'app-row';
+      const tvLinksHtml = (app.tvLinks || [])
+        .map(l => `<a href="${l.url}" target="_blank" rel="noopener">${l.label}</a>`)
+        .join('');
       row.innerHTML = `
         <div class="app-name">${app.name}</div>
         <div class="app-platforms">${app.platforms}</div>
-        <div class="app-links"><a href="${app.url}" target="_blank" rel="noopener">Download →</a></div>`;
+        <div class="app-links">
+          <a href="${app.url}" target="_blank" rel="noopener">Download →</a>
+        </div>
+        <div class="tv-links">${tvLinksHtml}</div>`;
       wrap.appendChild(row);
     });
   })();
