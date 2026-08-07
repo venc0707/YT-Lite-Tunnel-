@@ -21,7 +21,7 @@ Only requests to YouTube go through the tunnel server. Everything else (all othe
 ## Getting started (use the public server)
 
 1. Install [Happ](https://www.happ.su/main) — available for Android, Windows, macOS, Linux, iOS, and TV.
-2. Copy the subscription link from the [landing page](#) (the "📋 Copy for Happ" button).
+2. Copy the subscription link from the [landing page](https://venc0707.github.io/YT-Lite-Tunnel-/) (the "📋 Copy for Happ" button).
 3. In Happ, choose **"From the buffer"** and paste it.
 4. Connect. Done — YouTube without ads, everything else as usual.
 
@@ -33,14 +33,10 @@ Since the project is open source, you're not limited to the public server.
 
 ## Project status & costs
 
-The public server's live status, traffic usage, and monthly running costs are shown on the [landing page](#). The project is fully volunteer-funded — it stays online as long as donations cover hosting costs.
+The public server's live status, traffic usage, and monthly running costs are shown on the [landing page](https://venc0707.github.io/YT-Lite-Tunnel-/). The project is fully volunteer-funded — it stays online as long as donations cover hosting costs.
 
 If you'd like to support the public server, see the **Support the project** section on the landing page, or the donation link there.
 
 ## Contributing
 
 Issues and pull requests are welcome. If you find a bug or have a feature request, open an issue — or reach out on [Telegram](https://t.me/+s87tEkPayo9iOWFi), we reply there.
-
-## License
-
-MIT — see [LICENSE](LICENSE) for details.
