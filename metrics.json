@@ -1,0 +1,14 @@
+{
+  "status": "online",
+  "location": "Russia",
+  "load_percent": 1,
+  "traffic": {
+    "used_tb": 0.0,
+    "limit_tb": 3,
+    "remaining_tb": 3.0,
+    "percent_used": 0.0
+  },
+  "limit_exceeded": false,
+  "action_taken": "none",
+  "updated_at": "2026-08-07T20:08:19Z"
+}
