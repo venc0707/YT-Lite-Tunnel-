@@ -517,8 +517,8 @@
 
       <div class="status-grid">
         <div class="status-item">
-          <div class="status-key"><span class="dot"></span> status</div>
-          <div class="status-val">online</div>
+          <div class="status-key"><span class="dot" id="statusDot"></span> status</div>
+          <div class="status-val" id="statStatus">online</div>
         </div>
         <div class="status-item">
           <div class="status-key">location</div>
@@ -537,6 +537,7 @@
       <div class="bar-track"><div class="bar-fill" id="trafficBar"></div></div>
       <div class="bar-note" id="trafficNote">resets on the 1st of each month</div>
       <div class="bar-note" id="bandwidthNote" style="margin-top:4px;">Network bandwidth — up to 3 Gbit/s</div>
+      <div class="bar-note" id="statusUpdated" style="margin-top:4px;"></div>
     </section>
 
     <!-- ================= 4. INSTALL ================= -->
@@ -634,10 +635,16 @@
     githubUrl: 'https://github.com/venc0707/YT-Lite-Tunnel-',
     telegramUrl: 'https://t.me/+s87tEkPayo9iOWFi',
 
-    // traffic — filled in manually for now
+    // traffic — fallback values, used only if the live metrics.json fetch fails
     trafficUsedTB: 0.61,
     trafficTotalTB: 3,
     resetDayOfMonth: 1,
+
+    // live metrics fetched from GitHub (written by monitor.sh via cron).
+    // Raw GitHub URLs allow cross-origin fetch (CORS-friendly) and are cached
+    // by GitHub's CDN for a short time — good enough for a 5-minute refresh.
+    metricsUrl: 'https://raw.githubusercontent.com/USERNAME/REPO/main/metrics.json',
+    metricsRefreshMs: 5 * 60 * 1000, // re-fetch every 5 minutes, matches cron interval
 
     // approximate RUB -> USD rate, update by hand every so often.
     // Only used to show a rough "(~$x)" hint next to ruble amounts.
@@ -707,25 +714,73 @@
   wireSupportButton('supportBtnHero', 'supportNoticeHero');
   wireSupportButton('supportBtnBottom', 'supportNotice');
 
-  // ---- status ----
-  document.getElementById('statLocation').textContent = CONFIG.location;
-  document.getElementById('statLoad').textContent = CONFIG.loadPercent + '%';
+  // ---- status + traffic rendering (now a function, called with either
+  //      live data from metrics.json or the fallback CONFIG values) ----
+  function renderStatus({ status, location, loadPercent, trafficUsedTB, trafficTotalTB, updatedAt }){
+    const dot = document.getElementById('statusDot');
+    const statusEl = document.getElementById('statStatus');
+    const isOnline = status === 'online';
+    statusEl.textContent = status || 'unknown';
+    dot.style.background = isOnline ? 'var(--accent)' : 'var(--danger)';
+    dot.style.animationPlayState = isOnline ? 'running' : 'paused';
 
-  // ---- traffic bar ----
-  function fmtTraffic(tb){
-    return `${Math.round(tb * 1000)} GB`;
-  }
+    document.getElementById('statLocation').textContent = location;
+    document.getElementById('statLoad').textContent = loadPercent + '%';
 
-  (function renderTraffic(){
-    const used = CONFIG.trafficUsedTB;
-    const total = CONFIG.trafficTotalTB;
-    const left = total - used;
+    const used = trafficUsedTB;
+    const total = trafficTotalTB;
+    const left = Math.max(0, total - used);
     const pct = Math.min(100, (used / total) * 100);
     document.getElementById('trafficUsed').textContent = `${fmtTraffic(used)} / ${fmtTraffic(total)}`;
     document.getElementById('trafficLeft').textContent = fmtTraffic(left);
     document.getElementById('trafficBar').style.width = pct + '%';
+    document.getElementById('trafficBar').style.background = pct >= 100 ? 'var(--danger)' : 'var(--accent)';
     document.getElementById('trafficNote').textContent = `resets on day ${CONFIG.resetDayOfMonth} of each month`;
-  })();
+
+    const updatedEl = document.getElementById('statusUpdated');
+    if (updatedAt) {
+      const d = new Date(updatedAt);
+      updatedEl.textContent = `last updated ${d.toLocaleString()}`;
+    } else {
+      updatedEl.textContent = '';
+    }
+  }
+
+  function fmtTraffic(tb){
+    return `${Math.round(tb * 1000)} GB`;
+  }
+
+  // ---- fetch live metrics.json from GitHub; fall back to CONFIG on failure ----
+  function loadMetrics(){
+    // cache-busting query param so the browser doesn't serve a stale cached copy
+    const url = `${CONFIG.metricsUrl}?_=${Date.now()}`;
+    fetch(url)
+      .then(r => { if (!r.ok) throw new Error('metrics fetch failed'); return r.json(); })
+      .then(data => {
+        renderStatus({
+          status: data.status,
+          location: data.location,
+          loadPercent: data.load_percent,
+          trafficUsedTB: data.traffic.used_tb,
+          trafficTotalTB: data.traffic.limit_tb,
+          updatedAt: data.updated_at
+        });
+      })
+      .catch(() => {
+        // fetch failed (network issue, repo not public, wrong URL, etc.) — show fallback values
+        renderStatus({
+          status: 'online',
+          location: CONFIG.location,
+          loadPercent: CONFIG.loadPercent,
+          trafficUsedTB: CONFIG.trafficUsedTB,
+          trafficTotalTB: CONFIG.trafficTotalTB,
+          updatedAt: null
+        });
+      });
+  }
+
+  loadMetrics();
+  setInterval(loadMetrics, CONFIG.metricsRefreshMs);
 
   // ---- support / cost breakdown + donations ----
   (function renderSupport(){
