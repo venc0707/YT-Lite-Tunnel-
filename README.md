@@ -9,7 +9,7 @@ A small proxy: only YouTube traffic is routed through the server to strip ads, w
 Only requests to YouTube go through the tunnel server. Everything else (all other apps and sites) connects directly, as usual — so there's no slowdown or extra load for anything unrelated to YouTube.
 
 ```
-Client (Happ / v2rayNG / Streisand)
+Client (Happ)
         │
         ├── youtube.com / googlevideo.com ──▶  Tunnel server (VLESS + Reality)
         │
