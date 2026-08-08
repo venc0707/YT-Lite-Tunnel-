@@ -1,0 +1,97 @@
+{
+  "log": {
+    "loglevel": "warning"
+  },
+  "inbounds": [
+    {
+      "tag": "VLESS_TCP_REALITY",
+      "port": 443,
+      "listen": "0.0.0.0",
+      "protocol": "vless",
+      "settings": {
+        "clients": [
+          {
+            "id": "REPLACE_WITH_UUID",
+            "email": "client1",
+            "flow": "xtls-rprx-vision"
+          }
+        ],
+        "decryption": "none"
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": ["http", "tls", "quic"],
+        "routeOnly": false
+      },
+      "streamSettings": {
+        "network": "raw",
+        "security": "reality",
+        "realitySettings": {
+          "dest": "REPLACE_WITH_MASK_DOMAIN:443",
+          "show": false,
+          "xver": 0,
+          "shortIds": ["REPLACE_WITH_SHORT_ID"],
+          "privateKey": "REPLACE_WITH_PRIVATE_KEY",
+          "serverNames": ["REPLACE_WITH_MASK_DOMAIN"]
+        }
+      }
+    },
+    {
+      "tag": "VLESS_XHTTP_REALITY",
+      "port": 8443,
+      "listen": "0.0.0.0",
+      "protocol": "vless",
+      "settings": {
+        "clients": [
+          {
+            "id": "REPLACE_WITH_UUID",
+            "email": "client1"
+          }
+        ],
+        "decryption": "none"
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": ["http", "tls", "quic"],
+        "routeOnly": false
+      },
+      "streamSettings": {
+        "network": "xhttp",
+        "security": "reality",
+        "xhttpSettings": {
+          "host": "REPLACE_WITH_MASK_DOMAIN",
+          "mode": "auto",
+          "path": "/"
+        },
+        "realitySettings": {
+          "dest": "REPLACE_WITH_MASK_DOMAIN:443",
+          "show": false,
+          "xver": 0,
+          "shortIds": ["REPLACE_WITH_SHORT_ID"],
+          "privateKey": "REPLACE_WITH_PRIVATE_KEY",
+          "serverNames": ["REPLACE_WITH_MASK_DOMAIN"]
+        }
+      }
+    }
+  ],
+  "outbounds": [
+    {
+      "protocol": "freedom",
+      "tag": "DIRECT",
+      "settings": { "domainStrategy": "UseIPv4" }
+    },
+    {
+      "protocol": "blackhole",
+      "tag": "BLOCK",
+      "settings": { "response": { "type": "http" } }
+    }
+  ],
+  "routing": {
+    "domainMatcher": "hybrid",
+    "domainStrategy": "IPIfNonMatch",
+    "rules": [
+      { "type": "field", "protocol": ["bittorrent"], "outboundTag": "BLOCK" },
+      { "type": "field", "network": "tcp,udp", "outboundTag": "DIRECT" }
+    ]
+  }
+}
