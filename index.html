@@ -644,7 +644,7 @@
     // Raw GitHub URLs allow cross-origin fetch (CORS-friendly) and are cached
     // by GitHub's CDN for a short time — good enough for a 5-minute refresh.
     metricsUrl: 'https://raw.githubusercontent.com/venc0707/YT-Lite-Tunnel-/main/metrics.json',
-    metricsRefreshMs: 15 * 60 * 1000, // re-fetch every 5 minutes, matches cron interval
+    metricsRefreshMs: 60 * 60 * 1000, // re-fetch every 5 minutes, matches cron interval
 
     // approximate RUB -> USD rate, update by hand every so often.
     // Only used to show a rough "(~$x)" hint next to ruble amounts.
