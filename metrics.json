@@ -3,12 +3,12 @@
   "location": "Russia",
   "load_percent": 0,
   "traffic": {
-    "used_tb": 0.004,
+    "used_tb": 0.005,
     "limit_tb": 3,
-    "remaining_tb": 2.996,
-    "percent_used": 0.1
+    "remaining_tb": 2.995,
+    "percent_used": 0.2
   },
   "limit_exceeded": false,
   "action_taken": "none",
-  "updated_at": "2026-08-09T16:00:03Z"
+  "updated_at": "2026-08-09T17:00:02Z"
 }
